@@ -2,14 +2,12 @@ class RollingAverage {
   constructor(size, initialValue = 0) {
     this.size = size;
     this.sum = size * initialValue;
-
-    this.generation = 1;
   }
-
+  
   push(value) {
     this.sum += value - this.sum / this.size;
   }
-
+  
   get average() {
     return this.sum / this.size;
   }
@@ -20,11 +18,11 @@ class UserInterface {
     this.game = game;
 
     this.fps = new RollingAverage(60, 60);
+    this.generation = 1;
   }
 
   draw() {
-
-    let text = "";
+    let text = `Generation: ${this.generation}\n`;
 
     const instantFps = 1 / this.game.dt;
     if (instantFps != Infinity) {
@@ -34,6 +32,15 @@ class UserInterface {
 
     ctx.fillStyle = "#586e75";
     ctx.font = '16px "JetBrains Mono", monospace';
-    ctx.fillText(text, 50, 50);
+
+    const lines = text.split("\n");
+    const x = 50;
+    let y = 50;
+    const lineHeight = 24;
+
+    for (const line of lines) {
+      ctx.fillText(line, x, y);
+      y += lineHeight;
+    }
   }
 }

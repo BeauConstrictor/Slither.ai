@@ -254,9 +254,11 @@ class BotSnake extends Snake {
         this.rayResults = [];
 
         this.lastOrbTime = 0;
+
+        this.previousSteer = 0;
     }
 
-    raycast(origin, angle, maxDistance = 200) {
+    raycast(origin, angle, maxDistance = SIGHT_DISTANCE) {
         const step = 5;
         const worldEdge = WORLD_RADIUS * 2.5;
         let distance = 0;
@@ -282,7 +284,7 @@ class BotSnake extends Snake {
                 for (const seg of snake.segments) {
                     const dx = seg.x - x;
                     const dy = seg.y - y;
-                    if (Math.sqrt(dx * dx + dy * dy) < SPACING / 2) {
+                    if (dx * dx + dy * dy < (SPACING / 2) ** 2) {
                         return { distance, type: 'snake', x, y };
                     }
                 }
@@ -300,17 +302,23 @@ class BotSnake extends Snake {
         const inputs = [];
 
         for (const r of this.rayResults) {
-            inputs.push(1 / r.distance);
+            if (r.type == "food") {
+                inputs.push(1 / r.distance);
+            } else {
+                inputs.push(1 / SIGHT_DISTANCE);
+            }
         }
 
-        inputs.push(this.heading);
+        inputs.push(this.previousSteer);
         inputs.push(this.length);
 
         let outputs = this.genome.propagate(inputs);
+        this.previousSteer = outputs[0];
         const newHeading = this.heading + outputs[0] * TURN_SPEED;
         return {
             x: Math.cos(newHeading),
-            y: Math.sin(newHeading)
+            y: Math.sin(newHeading),
+            boost: outputs[1] > 0,
         };
     }
 
@@ -332,6 +340,7 @@ class BotSnake extends Snake {
                 genome,
                 this.population));
         }
+        this.game.ui.generation ++;
     }
 
     step() {
@@ -391,7 +400,7 @@ class BotSnake extends Snake {
 function createPopulation(game) {
     const config = new NEATJavaScript.Config({
         inputSize: RAYS + 2,
-        outputSize: 1,
+        outputSize: 2,
         populationSize: BOT_COUNT,
         activationFunction: "Tanh",
     });

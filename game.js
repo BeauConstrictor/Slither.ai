@@ -173,6 +173,7 @@ class Game {
         this.gameOvered = false;
 
         this.resizeCanvas();
+        this.resizeCanvas = this.resizeCanvas.bind(this);
         window.addEventListener("resize", this.resizeCanvas);
     }
 
