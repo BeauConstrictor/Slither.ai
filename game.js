@@ -90,14 +90,14 @@ class Wall {
 }
 
 class Orb {
-    constructor(game, pos) {
+    constructor(game, x, y) {
         this.isTemp = false;
         this.game = game;
         this.regen();
 
-        if (pos) {
-            this.x = pos.x;
-            this.x = pos.y;
+        if (x && y) {
+            this.x = x;
+            this.y = y;
             this.isTemp = true;
         }
     }

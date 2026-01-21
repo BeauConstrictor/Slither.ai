@@ -28,7 +28,7 @@ class Snake {
 
     kill() {
         for (let s of this.segments) {
-            this.game.orbs.push(new Orb(this.game, s.x, s.y))
+            this.game.orbs.push(new Orb(this.game, s.x, s.y));
         }
         this.dead = true;
     }
@@ -293,6 +293,12 @@ class BotSnake extends Snake {
         super(game);
         this.currentHeading = Math.random() * Math.PI * 2;
         this.id = Math.floor(Math.random() * 10000);
+    }
+
+    kill() {
+        super.kill();
+
+        this.game.bots.splice(this.game.bots.indexOf(this), 1);
     }
 
     target() {
