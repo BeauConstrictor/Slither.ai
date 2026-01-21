@@ -90,12 +90,24 @@ class Wall {
 }
 
 class Orb {
-    constructor(game) {
+    constructor(game, pos) {
+        this.isTemp = false;
         this.game = game;
         this.regen();
+
+        if (pos) {
+            this.x = pos.x;
+            this.x = pos.y;
+            this.isTemp = true;
+        }
     }
 
     regen() {
+        if (this.isTemp) {
+            this.game.orbs.splice(this.game.orbs.indexOf(this), 1);
+            return
+        }
+
         this.x = signedGaussRand(0, WORLD_RADIUS);
         this.y = signedGaussRand(0, WORLD_RADIUS);
         this.radius = randomInt(ORB_SIZE.min, ORB_SIZE.max);
@@ -124,6 +136,10 @@ class Orb {
             snake.grow(this.radius);
             snake.lastOrbTime = 0;
             this.regen();
+
+            if (snake === this.game.player) {
+                this.game.ui.lengthSizeBoost += 5;
+            }
         }
     }
 
@@ -160,7 +176,8 @@ class Game {
         this.bg = new Background(this);
         this.wall = new Wall(this);
         this.player = new PlayerSnake(this);
-        this.bots = createPopulation(this);
+        this.bots = [];
+        for (let i = 0; i < BOT_COUNT; i++) this.bots.push(new BotSnake(this));
         this.orbs = [];
         for (let i = 0; i < ORB_COUNT; i++) this.orbs.push(new Orb(this));
         this.ui = new UserInterface(this);
@@ -221,17 +238,22 @@ class Game {
             this.input.scrollDelta = 0;
         }
 
-        if (!this.gameOvered) {
+        if (this.input.keys.has("Space")) {
+            this.paused = !this.paused;
+        }
+
+        if (!this.gameOvered && !this.paused) {
             for (let i = 0; i < SIM_SPEED; i++) this.step();
         }
         this.draw();
 
         this.frameId += 1;
 
+        this.input.keys.clear();
         requestAnimationFrame(this.frame);
     }
 }
 
-const game = new Game();
+window.game = new Game();
 game.resizeCanvas();
 requestAnimationFrame(game.frame);

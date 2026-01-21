@@ -120,6 +120,12 @@ function signedGaussRand(mean = 0, stdDev = 1) {
     return Math.random() < 0.5 ? -Math.abs(value) : Math.abs(value);
 }
 
+function normaliseAngle(angle) {
+    while (angle > Math.PI) angle -= 2 * Math.PI;
+    while (angle < -Math.PI) angle += 2 * Math.PI;
+    return angle;
+}
+
 class Input {
     constructor(game) {
         this.game = game;
@@ -142,27 +148,11 @@ class Input {
             event.preventDefault();
             this.scrollDelta = event.deltaY;
         }, { passive: false });
-    }
-}
 
-class CircularBuffer {
-    constructor(capacity, initialValue) {
-        this.capacity = capacity;
-        this.buffer = new Array(capacity).fill(initialValue);
-        this.size = capacity;
-        this.head = 0;
-    }
+        this.keys = new Set([]);
 
-    push(value) {
-        this.buffer[this.head] = value;
-        this.head = (this.head + 1) % this.capacity;
-    }
-
-    toArray() {
-        const result = new Array(this.capacity);
-        for (let i = 0; i < this.capacity; i++) {
-            result[i] = this.buffer[(this.head + i) % this.capacity];
-        }
-        return result;
+        canvas.addEventListener("keydown", (event) => {
+            this.keys.add(event.key);
+        })
     }
 }

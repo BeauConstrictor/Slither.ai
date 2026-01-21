@@ -27,6 +27,9 @@ class Snake {
     }
 
     kill() {
+        for (let s of this.segments) {
+            this.game.orbs.push(new Orb(this.game, s.x, s.y))
+        }
         this.dead = true;
     }
 
@@ -42,6 +45,54 @@ class Snake {
         return { x: 0, y: 0, boost: false };
     }
 
+    checkPlayerBotCollisions() {
+        if (this.dead) return;
+
+        const player = this.game.player;
+
+        let snakesToCheck = [];
+        if (this instanceof BotSnake) {
+            if (!player.dead) snakesToCheck.push(player);
+        } else if (this instanceof PlayerSnake) {
+            snakesToCheck = this.game.bots.filter(bot => !bot.dead);
+        } else {
+            return;
+        }
+
+        const myHead = this.head;
+        const myRadius = snakeRadius(this.length);
+
+        for (const snake of snakesToCheck) {
+            const otherHead = snake.head;
+            const otherRadius = snakeRadius(snake.length);
+
+            const dxH = myHead.x - otherHead.x;
+            const dyH = myHead.y - otherHead.y;
+            const headDist = Math.sqrt(dxH * dxH + dyH * dyH);
+
+            if (headDist < myRadius + otherRadius) {
+                if (this instanceof PlayerSnake) {
+                    this.kill();
+                } else if (snake instanceof PlayerSnake) {
+                    snake.kill();
+                }
+                return;
+            }
+
+            for (let i = 1; i < snake.segments.length; i++) {
+                const seg = snake.segments[i];
+                const dx = myHead.x - seg.x;
+                const dy = myHead.y - seg.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < myRadius) {
+                    this.kill();
+                    return;
+                }
+            }
+        }
+    }
+
     step() {
         if (this.dead) return;
 
@@ -53,7 +104,6 @@ class Snake {
         if (this.boost) {
             speed = BOOST_SPEED * this.game.dt;
 
-            // Accumulate time boosting
             if (!this.boostTime) this.boostTime = 0;
             this.boostTime += this.game.dt;
 
@@ -93,6 +143,8 @@ class Snake {
             p.x += move.x;
             p.y += move.y;
         }
+
+        this.checkPlayerBotCollisions();
     }
 
     grow(points) {
@@ -236,181 +288,111 @@ class PlayerSnake extends Snake {
     }
 }
 
-const RAYS = 10;
-const SIGHT_DISTANCE = 500;
-const MAX_NO_ORB_TIME = 10; // seconds
-
-const SNAKE_DBG_COL = genColors(PALETTE[0]).accent;
-const ORB_DBG_COL = genColors(PALETTE[3]).accent;
-const WALL_DBG_COL = genColors(PALETTE[6]).accent;
-
 class BotSnake extends Snake {
-    constructor(game, genome, population) {
+    constructor(game) {
         super(game);
-
-        this.genome = genome;
-        this.population = population;
-        this.rayAngles = generateAngles(RAYS);
-        this.rayResults = [];
-
-        this.lastOrbTime = 0;
-
-        this.previousSteer = 0;
-    }
-
-    raycast(origin, angle, maxDistance = SIGHT_DISTANCE) {
-        const step = 5;
-        const worldEdge = WORLD_RADIUS * 2.5;
-        let distance = 0;
-
-        while (distance < maxDistance) {
-            const x = origin.x + Math.cos(angle) * distance;
-            const y = origin.y + Math.sin(angle) * distance;
-
-            if (x < -worldEdge || x > worldEdge || y < -worldEdge || y > worldEdge) {
-                return { distance, type: 'wall', x, y };
-            }
-
-            for (const food of this.game.orbs) {
-                const dx = food.x - x;
-                const dy = food.y - y;
-                if (dx * dx + dy * dy < food.radius * food.radius) {
-                    return { distance, type: 'food', x, y };
-                }
-            }
-
-            for (const snake of [this.game.player, ...this.game.bots]) {
-                if (snake === this) continue;
-                for (const seg of snake.segments) {
-                    const dx = seg.x - x;
-                    const dy = seg.y - y;
-                    if (dx * dx + dy * dy < (SPACING / 2) ** 2) {
-                        return { distance, type: 'snake', x, y };
-                    }
-                }
-            }
-
-            distance += step;
-        }
-
-        const x = origin.x + Math.cos(angle) * maxDistance;
-        const y = origin.y + Math.sin(angle) * maxDistance;
-        return { distance: maxDistance, type: 'none', x, y };
+        this.currentHeading = Math.random() * Math.PI * 2;
+        this.id = Math.floor(Math.random() * 10000);
     }
 
     target() {
-        const inputs = [];
+        const head = this.head;
+        let desired = this.currentHeading;
 
-        for (const r of this.rayResults) {
-            if (r.type == "food") {
-                inputs.push(1 / r.distance);
-            } else {
-                inputs.push(1 / SIGHT_DISTANCE);
+        if (this.game.orbs.length > 0) {
+            let closestOrb = null;
+            let minDistSq = Infinity;
+
+            for (const orb of this.game.orbs) {
+                const dx = orb.x - head.x;
+                const dy = orb.y - head.y;
+                const d = dx * dx + dy * dy;
+                if (d < minDistSq) {
+                    minDistSq = d;
+                    closestOrb = orb;
+                }
+            }
+
+            if (closestOrb) {
+                const angleToOrb = Math.atan2(
+                    closestOrb.y - head.y,
+                    closestOrb.x - head.x
+                );
+
+                const orbWeight =
+                    this.threatLevel > 0.1
+                        ? BOT_ORB_ATTRACT_FAR
+                        : BOT_ORB_ATTRACT;
+
+                desired += orbWeight *
+                    normaliseAngle(angleToOrb - desired);
+            }
+        } else {
+            const t = performance.now() * 0.001 * BOT_NOISE_SCALE + this.id;
+            desired += Math.sin(t * Math.PI * 2) * BOT_NOISE_SWAY;
+        }
+
+        let closestDist = Infinity;
+        let repelAngle = null;
+
+        const snakes = [this.game.player, ...this.game.bots];
+        for (const snake of snakes) {
+            if (snake === this || snake.dead) continue;
+
+            for (let i = 0; i < snake.segments.length; i += BOT_SEGMENT_SKIP) {
+                const s = snake.segments[i];
+                const dx = s.x - head.x;
+                const dy = s.y - head.y;
+
+                let dist = Math.hypot(dx, dy);
+                dist -= snakeRadius(snake.length);
+
+                if (dist < closestDist) {
+                    closestDist = dist;
+                    repelAngle = Math.atan2(dy, dx);
+                }
             }
         }
 
-        inputs.push(this.previousSteer);
-        inputs.push(this.length);
+        this.threatLevel = 0;
 
-        let outputs = this.genome.propagate(inputs);
-        this.previousSteer = outputs[0];
-        const newHeading = this.heading + outputs[0] * TURN_SPEED;
+        if (closestDist < BOT_REPEL_DISTANCE && repelAngle !== null) {
+            const danger = 1 - (closestDist / BOT_REPEL_DISTANCE);
+            const scaled = Math.pow(danger, BOT_REPEL_EXPONENT);
+
+            this.threatLevel = scaled;
+
+            desired +=
+                BOT_REPEL_WEIGHT *
+                BOT_AGGRESSION *
+                scaled *
+                normaliseAngle(repelAngle + Math.PI - desired);
+        }
+
+        const distFromCenter = Math.hypot(head.x, head.y);
+        const REAL_EDGE_RADIUS = WORLD_RADIUS * 2.5;
+
+        if (distFromCenter > BOT_EDGE_BUFFER) {
+            const toCenter = Math.atan2(-head.y, -head.x);
+            const t = (distFromCenter - BOT_EDGE_BUFFER) /
+                (REAL_EDGE_RADIUS - BOT_EDGE_BUFFER);
+
+            desired = lerpAngle(
+                desired,
+                toCenter,
+                t * BOT_EDGE_FORCE
+            );
+        }
+
+        let delta = normaliseAngle(desired - this.currentHeading);
+        const maxTurn = BOT_TURN_SPEED * this.game.dt;
+        delta = Math.max(-maxTurn, Math.min(maxTurn, delta));
+        this.currentHeading += delta;
+
         return {
-            x: Math.cos(newHeading),
-            y: Math.sin(newHeading),
-            boost: outputs[1] > 0,
+            x: Math.cos(this.currentHeading),
+            y: Math.sin(this.currentHeading),
+            boost: false
         };
     }
-
-    fitness() {
-        return this.length;
-    }
-
-    kill() {
-        super.kill();
-        this.genome.fitness = this.fitness();
-        this.game.bots.splice(this.game.bots.indexOf(this), 1);
-        if (this.game.bots.length > 0) return;
-
-        console.log("evolve!");
-        this.population.evolve();
-        this.game.bots = [];
-        for (let genome of this.population.genomes) {
-            this.game.bots.push(new BotSnake(this.game,
-                genome,
-                this.population));
-        }
-        this.game.ui.generation ++;
-    }
-
-    step() {
-        if (this.dead) return;
-
-        this.rayResults = [];
-        for (const a of this.rayAngles) {
-            const ray = this.raycast(this.head, this.heading + a, SIGHT_DISTANCE);
-            this.rayResults.push(ray);
-        }
-
-        this.lastOrbTime += this.game.dt;
-        if (this.lastOrbTime > MAX_NO_ORB_TIME) return this.kill();
-
-        super.step();
-    }
-
-    draw() {
-        if (this.dead) return;
-        super.draw();
-
-        const head = this.head;
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-
-        for (const ray of this.rayResults) {
-            let color = 'transparent';
-            if (ray.type === 'wall') color = WALL_DBG_COL;
-            else if (ray.type === 'snake') color = SNAKE_DBG_COL;
-            else if (ray.type === 'food') color = ORB_DBG_COL;
-
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 1;
-
-            ctx.beginPath();
-            ctx.moveTo(
-                (head.x - this.game.player.head.x) * this.game.zoom + centerX,
-                (head.y - this.game.player.head.y) * this.game.zoom + centerY
-            );
-            ctx.lineTo(
-                (ray.x - this.game.player.head.x) * this.game.zoom + centerX,
-                (ray.y - this.game.player.head.y) * this.game.zoom + centerY
-            );
-            ctx.stroke();
-        }
-    }
-}
-
-// neural network:
-//   inputs:
-//   - raycasts
-//   - length
-//   - previous turn angle
-//   outputs:
-//   - turn angle
-
-function createPopulation(game) {
-    const config = new NEATJavaScript.Config({
-        inputSize: RAYS + 2,
-        outputSize: 2,
-        populationSize: BOT_COUNT,
-        activationFunction: "Tanh",
-    });
-
-    const population = new NEATJavaScript.Population(config);
-    const bots = [];
-
-    for (let genome of population.genomes) {
-        bots.push(new BotSnake(game, genome, population));
-    }
-
-    return bots;
 }
