@@ -151,7 +151,7 @@ class Input {
 
         this.keys = new Set([]);
 
-        canvas.addEventListener("keydown", (event) => {
+        window.addEventListener("keydown", (event) => {
             this.keys.add(event.key);
         })
     }

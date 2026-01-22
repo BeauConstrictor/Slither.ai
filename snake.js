@@ -27,8 +27,14 @@ class Snake {
     }
 
     kill() {
-        for (let s of this.segments) {
-            this.game.orbs.push(new Orb(this.game, s.x, s.y));
+        for (let i = 0; i < this.length; i++) {
+            if (i % 7 !== 0) continue;
+            const s = this.segments[i];
+            for (let _ = 0; _ < 3; _++) {
+                const ox = Math.random() * 30;
+                const oy = Math.random() * 30;
+                this.game.orbs.push(new Orb(this.game, s.x+ox, s.y+oy));
+            }
         }
         this.dead = true;
     }

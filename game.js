@@ -188,6 +188,7 @@ class Game {
         this.zoom = 1;
 
         this.gameOvered = false;
+        this.paused = false;
 
         this.resizeCanvas();
         this.resizeCanvas = this.resizeCanvas.bind(this);
@@ -196,6 +197,10 @@ class Game {
 
     gameOver() {
         this.gameOvered = true;
+        window.addEventListener('keydown', () => {
+            location.reload();
+        }, { once: true });
+
     }
 
     updateDeltaTime(timestamp) {
@@ -238,7 +243,7 @@ class Game {
             this.input.scrollDelta = 0;
         }
 
-        if (this.input.keys.has("Space")) {
+        if (this.input.keys.has(" ")) {
             this.paused = !this.paused;
         }
 
