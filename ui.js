@@ -74,10 +74,10 @@ class UserInterface {
 
     const snakes = [...this.game.bots, this.game.player];
     for (let snake of snakes) {
-      const distSq = snake.head.x**2 + snake.head.y**2;
+      const distSq = snake.head.x ** 2 + snake.head.y ** 2;
       const maxDist = WORLD_RADIUS * 2.5 - MINIMAP_BOT_SPOT_SIZE;
 
-      if (distSq >= maxDist**2) continue;
+      if (distSq >= maxDist ** 2) continue;
 
       const x = snake.head.x * mmScale;
       const y = snake.head.y * mmScale;
@@ -92,17 +92,29 @@ class UserInterface {
 
   drawLengthValue() {
     const centerX = canvas.width / 2;
-    
+
     this.lengthSizeBoost = Math.max(0, this.lengthSizeBoost - 0.2);
-    this.lengthSizeBoost = Math.min(this.lengthSizeBoost,
-      LENGTH_MAX_FONT_SIZE - LENGTH_FONT_SIZE);
+    this.lengthSizeBoost = Math.min(
+      this.lengthSizeBoost,
+      LENGTH_MAX_FONT_SIZE - LENGTH_FONT_SIZE
+    );
+
+    const shake = Math.sin(performance.now() * 0.02) * LENGTH_SHAKE *
+                  (this.lengthSizeBoost / (LENGTH_MAX_FONT_SIZE - LENGTH_FONT_SIZE));
+
+    ctx.save();
+    ctx.translate(centerX, LENGTH_TEXT_HEIGHT);
+    ctx.rotate(shake);
 
     const fontSize = LENGTH_FONT_SIZE + this.lengthSizeBoost;
-    ctx.font = `bold ${fontSize}px "JetBrains Mono", monospace`;
+    ctx.font = `bold ${fontSize}px "Atma", monospace`;
     ctx.fillStyle = "#cdd6f4";
     ctx.textAlign = "center";
-    ctx.fillText(this.game.player.length.toString(), centerX,
-      LENGTH_TEXT_HEIGHT);
+    ctx.textBaseline = "middle";
+
+    ctx.fillText(this.game.player.length.toString(), 0, 0);
+    ctx.restore();
+
   }
 
   drawPausingStatuses() {
