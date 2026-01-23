@@ -17,9 +17,16 @@ class Background {
         this.loaded = false;
     }
 
-    draw() {
+    draw(pos) {
         const head = this.game.player.segments[0];
         const zoom = this.game.zoom;
+
+        let x = head.x;
+        let y = head.y;
+        if (pos) {
+            x = pos.x;
+            y = pos.y;
+        }
 
         if (!this.pattern) return;
 
@@ -30,12 +37,12 @@ class Background {
 
         const centerX = canvas.width / 2 / zoom;
         const centerY = canvas.height / 2 / zoom;
-        ctx.translate(-head.x + centerX, -head.y + centerY);
+        ctx.translate(-x + centerX, -y + centerY);
 
         ctx.fillStyle = this.pattern;
         ctx.fillRect(
-            head.x - centerX - 500,
-            head.y - centerY - 500,
+            x - centerX - 500,
+            y - centerY - 500,
             canvas.width / zoom + 1000,
             canvas.height / zoom + 1000
         );
@@ -118,6 +125,7 @@ class Orb {
         const colors = genColors(primaryRgb);
         this.primary = colors.primary;
         this.accent = colors.accent;
+        this.dim = colors.dim;
     }
 
     snakeStep(snake) {
@@ -241,7 +249,12 @@ class Game {
         this.updateDeltaTime(timestamp);
 
         if (this.input.scrollDelta !== 0) {
-            this.zoom *= this.input.scrollDelta > 0 ? 0.95 : 1.05;
+            let zoomChange = this.input.scrollDelta > 0 ? 0.95 : 1.05;
+            if (this.input.keys.has("Control")) {
+                if (zoomChange > 1) zoomChange *= ZOOM_SPEED_BOOST;
+                else this.zoom /= ZOOM_SPEED_BOOST;
+            };
+            this.zoom *= zoomChange;
             this.input.scrollDelta = 0;
         }
 
@@ -263,9 +276,13 @@ class Game {
     start() {
         this.resizeCanvas();
 
+        let gameStarted = false;
+        let bgFrame = 0;
+        let lastTime;
+
         const showBg = () => {
-            if (this.bg.loaded) this.bg.draw();
-            else setTimeout(showBg, 100);
+            if (gameStarted) return;
+            if (this.bg.loaded) this.bg.draw({ x: bgFrame*4, y: bgFrame/2 });
 
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
@@ -273,26 +290,30 @@ class Game {
             ctx.font = `bold 20px "JetBrains Mono", monospace`;
             ctx.fillStyle = "#cdd6f4";
             ctx.textAlign = "center";
-            ctx.fillText("Welcome to", centerX-145,
-                centerY-80);
+            ctx.fillText("Welcome to", centerX - 145,
+                centerY - 80);
 
             ctx.font = `bold 100px "JetBrains Mono", monospace`;
             ctx.fillStyle = "#cdd6f4";
             ctx.textAlign = "center";
             ctx.fillText("SLITHER", centerX,
-                centerY+20);
+                centerY + 20);
 
             ctx.font = `bold 30px "JetBrains Mono", monospace`;
             ctx.fillStyle = "#cdd6f4";
             ctx.textAlign = "center";
             ctx.fillText("Press ENTER to start...", centerX,
                 centerY + 80);
+
+            bgFrame += 1;
+            setTimeout(showBg, 48);
         }
         showBg();
 
 
         const startGame = (event) => {
             if (event.key == "Enter") {
+                gameStarted = true;
                 requestAnimationFrame(game.frame);
             } else {
                 window.addEventListener("keydown", startGame, { once: true });

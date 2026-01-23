@@ -22,10 +22,7 @@ class UserInterface {
     this.lengthSizeBoost = 0;
   }
 
-  draw() {
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-
+  drawTextOverlay() {
     let text = ``;
 
     const instantFps = 1 / this.game.dt;
@@ -47,7 +44,55 @@ class UserInterface {
       ctx.fillText(line, x, y);
       y += lineHeight;
     }
+  }
 
+  drawMinimap() {
+    const mmScale = MINIMAP_RADIUS / WORLD_RADIUS / 2.5;
+    const mmX = canvas.width - MINIMAP_RADIUS - MINIMAP_PADDING;
+    const mmY = canvas.height - MINIMAP_RADIUS - MINIMAP_PADDING;
+
+    ctx.fillStyle = "#313244";
+    ctx.beginPath();
+    ctx.arc(mmX, mmY, MINIMAP_RADIUS, 0, Math.PI * 2);
+    ctx.fill();
+
+    for (let orb of this.game.orbs) {
+      const distSq = orb.x * orb.x + orb.y * orb.y;
+      const maxDist = WORLD_RADIUS * 2.5 - orb.radius;
+
+      if (distSq >= maxDist * maxDist) continue;
+
+      const x = orb.x * mmScale;
+      const y = orb.y * mmScale;
+      const radius = orb.radius * mmScale;
+
+      ctx.fillStyle = orb.dim;
+      ctx.beginPath();
+      ctx.arc(mmX + x, mmY + y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    const snakes = [...this.game.bots, this.game.player];
+    for (let snake of snakes) {
+      const distSq = snake.head.x**2 + snake.head.y**2;
+      const maxDist = WORLD_RADIUS * 2.5 - MINIMAP_BOT_SPOT_SIZE;
+
+      if (distSq >= maxDist**2) continue;
+
+      const x = snake.head.x * mmScale;
+      const y = snake.head.y * mmScale;
+      const radius = MINIMAP_BOT_SPOT_SIZE * mmScale;
+
+      ctx.fillStyle = snake.primary;
+      ctx.beginPath();
+      ctx.arc(mmX + x, mmY + y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  drawLengthValue() {
+    const centerX = canvas.width / 2;
+    
     this.lengthSizeBoost = Math.max(0, this.lengthSizeBoost - 0.2);
     this.lengthSizeBoost = Math.min(this.lengthSizeBoost,
       LENGTH_MAX_FONT_SIZE - LENGTH_FONT_SIZE);
@@ -58,10 +103,17 @@ class UserInterface {
     ctx.textAlign = "center";
     ctx.fillText(this.game.player.length.toString(), centerX,
       LENGTH_TEXT_HEIGHT);
+  }
 
-    const barXOffset = 10;
-    const PAUSE_ICON_WIDTH = 20;
-    const PAUSE_ICON_HEIGHT = 80;
+  drawPausingStatuses() {
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+
+    if (this.game.gameOvered || this.game.paused) {
+      ctx.filter = "blur(6px)";
+      ctx.drawImage(canvas, 0, 0);
+      ctx.filter = "none";
+    }
 
     if (this.game.gameOvered) {
       ctx.font = `bold 50px "JetBrains Mono", monospace`;
@@ -74,17 +126,24 @@ class UserInterface {
     } else if (this.game.paused) {
       ctx.fillStyle = "#cdd6f4";
       ctx.fillRect(
-        centerX - PAUSE_ICON_WIDTH - barXOffset,
+        centerX - PAUSE_ICON_WIDTH - PAUSE_ICON_X_DIST,
         centerY - PAUSE_ICON_HEIGHT / 2,
         PAUSE_ICON_WIDTH,
         PAUSE_ICON_HEIGHT
       );
       ctx.fillRect(
-        centerX + barXOffset,
+        centerX + PAUSE_ICON_X_DIST,
         centerY - PAUSE_ICON_HEIGHT / 2,
         PAUSE_ICON_WIDTH,
         PAUSE_ICON_HEIGHT
       );
     }
+  }
+
+  draw() {
+    this.drawTextOverlay();
+    this.drawLengthValue();
+    this.drawMinimap();
+    this.drawPausingStatuses();
   }
 }

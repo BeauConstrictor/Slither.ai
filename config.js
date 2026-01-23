@@ -2,6 +2,7 @@
 const TILE = "./assets/bg.png";
 const WORLD_RADIUS = 2000;
 const SIM_SPEED = 1;
+const ZOOM_SPEED_BOOST = 2;
 
 const PALETTE = [
     [255, 0, 0],
@@ -34,7 +35,7 @@ const INITIAL_ENERGY = 1000;
 const MAX_ENERGY = 1000;
 
 function energyLoss(length) {
-    return 3 + length/40;
+    return 3 + length / 40;
 }
 
 function snakeRadius(length) {
@@ -49,7 +50,7 @@ const SHAKE_SIZE = 20;
 const SHAKE_SPEED = 2;
 
 // AI
-const BOT_COUNT = 49;
+const BOT_COUNT = 99;
 const BOT_TURN_SPEED = 4.2;
 const BOT_ORB_ATTRACT = 0.32;
 const BOT_ORB_ATTRACT_FAR = 0.08;
@@ -67,3 +68,11 @@ const BOT_AGGRESSION = 1.25;
 const LENGTH_TEXT_HEIGHT = 80;
 const LENGTH_FONT_SIZE = 30;
 const LENGTH_MAX_FONT_SIZE = 55;
+
+const PAUSE_ICON_X_DIST = 10;
+const PAUSE_ICON_WIDTH = 20;
+const PAUSE_ICON_HEIGHT = 80;
+
+const MINIMAP_PADDING = 50;
+const MINIMAP_RADIUS = 100;
+const MINIMAP_BOT_SPOT_SIZE = 80;

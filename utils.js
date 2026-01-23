@@ -38,11 +38,12 @@ function genColors(rgbArray) {
         "#" + rgb.map(c => c.toString(16).padStart(2, '0')).join('').toUpperCase();
 
     const originalHex = rgbToHex(rgbArray);
+    const accentHex = rgbToHex(rgbArray.map(c => Math.max(0, c - 50)));
+    const dimmedHex = rgbToHex(rgbArray.map(c => Math.max(0, c - 80)));
 
-    const darkenedRgb = rgbArray.map(c => Math.max(0, c - 50));
-    const darkenedHex = rgbToHex(darkenedRgb);
-
-    return { primary: originalHex, accent: darkenedHex };
+    return { primary: originalHex,
+             accent:    accentHex,
+             dim:       dimmedHex, };
 }
 
 function catmullRomToBezier(p0, p1, p2, p3) {
