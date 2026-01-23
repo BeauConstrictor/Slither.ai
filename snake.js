@@ -27,6 +27,8 @@ class Snake {
     }
 
     kill() {
+        playSfx("explosion");
+
         for (let i = 0; i < this.length; i++) {
             if (i % 7 !== 0) continue;
             const s = this.segments[i];
@@ -290,6 +292,7 @@ class PlayerSnake extends Snake {
     }
 
     kill() {
+        super.kill();
         this.game.gameOver();
     }
 }

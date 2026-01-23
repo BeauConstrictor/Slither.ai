@@ -134,7 +134,7 @@ function drawKey(ctx, x, y, key, width) {
     const radius = 6;
     const bgColor = "#585b70";
     const borderColor = "#a6adc8";
-    const textColor ="#cdd6f4";
+    const textColor = "#cdd6f4";
     const font = "16px JetBrains Mono";
 
     ctx.fillStyle = bgColor;
@@ -160,6 +160,11 @@ function drawKey(ctx, x, y, key, width) {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(key, x + width / 2, y + height / 2);
+}
+
+function playSfx(preset) {
+    const sound = sfxr.generate(preset);
+    sfxr.play(sound);
 }
 
 class Input {

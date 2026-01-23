@@ -149,6 +149,7 @@ class Orb {
 
             if (snake === this.game.player) {
                 this.game.ui.lengthSizeBoost += 5;
+                playSfx("click");
             }
         }
     }
@@ -250,7 +251,7 @@ class Game {
 
         if (this.input.scrollDelta !== 0) {
             let zoomChange = this.input.scrollDelta > 0 ? 0.95 : 1.05;
-            if (this.input.keys.has("Control")) {
+            if (this.input.keys.has("z")) {
                 if (zoomChange > 1) zoomChange *= ZOOM_SPEED_BOOST;
                 else this.zoom /= ZOOM_SPEED_BOOST;
             };
@@ -282,7 +283,7 @@ class Game {
 
         const showBg = () => {
             if (gameStarted) return;
-            if (this.bg.loaded) this.bg.draw({ x: bgFrame*4, y: bgFrame/2 });
+            if (this.bg.loaded) this.bg.draw({ x: bgFrame * 4, y: bgFrame / 2 });
 
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
@@ -302,9 +303,9 @@ class Game {
             ctx.font = `bold 24px "JetBrains Mono", monospace`;
             ctx.fillStyle = "#cdd6f4";
             ctx.textAlign = "left";
-            ctx.fillText("Press       to play.", centerX-203,
+            ctx.fillText("Press       to play.", centerX - 203,
                 centerY + 75);
-            drawKey(ctx, centerX-118, centerY+57, "Enter", 75);
+            drawKey(ctx, centerX - 118, centerY + 57, "Enter", 75);
 
             bgFrame += 1;
             setTimeout(showBg, 48);
@@ -315,6 +316,7 @@ class Game {
         const startGame = (event) => {
             if (event.key == "Enter") {
                 gameStarted = true;
+                playSfx("hitHurt");
                 requestAnimationFrame(game.frame);
             } else {
                 window.addEventListener("keydown", startGame, { once: true });
