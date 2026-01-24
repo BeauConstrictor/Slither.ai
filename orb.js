@@ -9,6 +9,8 @@ class Orb {
             this.y = y;
             this.isTemp = true;
         }
+
+        this.hasBeenAttractedThisFrame = false;
     }
 
     regen() {
@@ -36,7 +38,8 @@ class Orb {
         const dist = Math.sqrt(dx ** 2 + dy ** 2)
             - this.radius - snakeRadius(snake.length);
 
-        if (dist < EAT_DISTANCE) {
+        if (dist < EAT_DISTANCE && !this.hasBeenAttractedThisFrame) {
+            this.hasBeenAttractedThisFrame = true;
             const speed = BOOST_SPEED * 1.3 * this.game.dt;
             const direction = normalise({ x: dx, y: dy }, speed);
             this.x -= direction.x;
@@ -55,6 +58,8 @@ class Orb {
     }
 
     step() {
+        this.hasBeenAttractedThisFrame = false;
+
         for (let i = 0; i < this.game.bots.length; i++)
             this.snakeStep(this.game.bots[i]);
         const snake = this.game.player;

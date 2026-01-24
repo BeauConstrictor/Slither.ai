@@ -95,7 +95,7 @@ class Game {
     }
 
     start() {
-        const allBtns = document.querySelector("#buttons");
+        const allBtns = document.querySelectorAll("#buttons *");
         const sizeBtns = document.querySelectorAll("#world-sizes button");
         const playBtn = document.querySelector("#enter-key");
 
@@ -167,7 +167,7 @@ class Game {
             if (event.key == "Enter") {
                 gameStarted = true;
 
-                allBtns.remove();
+                allBtns.forEach(btn => btn.remove());
                 
                 const preset = worldSizePresets[worldSizePreset];
                 this.worldRadius = preset.radius;

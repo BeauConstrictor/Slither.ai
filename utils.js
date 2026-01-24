@@ -129,6 +129,40 @@ function normaliseAngle(angle) {
     return angle;
 }
 
+
+function drawKey(ctx, x, y, key, width) {
+    const height = 35;
+    const radius = 6;
+    const bgColor = "#585b70";
+    const borderColor = "#a6adc8";
+    const textColor = "#cdd6f4";
+    const font = "16px JetBrains Mono";
+
+    ctx.fillStyle = bgColor;
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = textColor;
+    ctx.font = font;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(key, x + width / 2, y + height / 2);
+}
+
 function playSfx(preset) {
     const sound = sfxr.generate(preset);
     sfxr.play(sound);
