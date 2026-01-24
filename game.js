@@ -101,16 +101,19 @@ class Game {
         this.resizeCanvas();
 
         let gameStarted = false;
-        let bgFrame = 0;
+        let titleFrame = 0;
         let lastTime;
         const titleL = new Image();
         titleL.src = 'assets/title-l.png';
         let titleLLoaded = false;
         titleL.onload = () => titleLLoaded = true;
 
-        const showBg = () => {
+        const showTitle = () => {
             if (gameStarted) return;
-            if (this.bg.loaded) this.bg.draw({ x: bgFrame * 4, y: bgFrame / 2 });
+            if (this.bg.loaded) this.bg.draw({
+                x: titleFrame * 4,
+                y: titleFrame / 2
+            });
 
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
@@ -121,18 +124,31 @@ class Game {
             ctx.fillText("Welcome to", centerX - 190,
                 centerY - 78);
 
+            const rotation = Math.sin(titleFrame * TITLE_ANIM_SPEED) * TITLE_WOBBLE;
+            const scale = 1 + Math.sin(titleFrame * TITLE_ANIM_SPEED + Math.PI / 2) * TITLE_SCALE;
+
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(rotation);
+            ctx.scale(scale, scale);
+
             ctx.font = `bold 100px "Atma", monospace`;
             ctx.fillStyle = "#cdd6f4";
             ctx.textAlign = "center";
-            ctx.fillText("S  ITHER", centerX,
-                centerY + 3.2);
+            ctx.fillText("S  ITHER", 0, 3.2);
 
             if (titleLLoaded) {
-                const scale = 0.5;
-                ctx.drawImage(titleL,
-                    centerX-270, centerY-53,
-                    titleL.width*scale, titleL.height*scale*0.8);
+                const imgScale = 0.5;
+                ctx.drawImage(
+                    titleL,
+                    -270,
+                    -53,
+                    titleL.width * imgScale,
+                    titleL.height * imgScale * 0.8
+                );
             }
+
+            ctx.restore();
 
             ctx.font = `bold 24px "JetBrains Mono", monospace`;
             ctx.fillStyle = "#cdd6f4";
@@ -141,10 +157,10 @@ class Game {
                 centerY + 60);
             drawKey(ctx, centerX - 105, centerY + 42, "Enter", 75);
 
-            bgFrame += 1;
-            setTimeout(showBg, 48);
+            titleFrame += 1;
+            setTimeout(showTitle, 48);
         }
-        showBg();
+        showTitle();
 
 
         const startGame = (event) => {
