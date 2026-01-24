@@ -109,10 +109,17 @@ class Game {
         titleL.onload = () => titleLLoaded = true;
 
         let worldSizePreset = localStorage.getItem("worldSize") || "normal";
+        sizeBtns.forEach((btn) => btn.classList.remove("active"));
+        sizeBtns.forEach((btn) => {
+            if (btn.innerText.toLowerCase() == worldSizePreset) {
+                btn.classList.add("active");
+            };
+        });
+
         sizeBtns.forEach((btn) => btn.addEventListener("click", () => {
             sizeBtns.forEach((btn2) => btn2.classList.remove("active"));
             btn.classList.add("active");
-            worldSizePreset = btn.innerHTML.toLowerCase();
+            worldSizePreset = btn.innerText.toLowerCase();
             localStorage.setItem("worldSize", worldSizePreset);
         }));
 
