@@ -136,15 +136,15 @@ class Game {
             ctx.font = `bold 20px "JetBrains Mono", monospace`;
             ctx.fillStyle = "#cdd6f4";
             ctx.textAlign = "left";
-            
+
             const rotation = Math.sin(titleFrame * TITLE_ANIM_SPEED) * TITLE_WOBBLE;
             const scale = 1 + Math.sin(titleFrame * TITLE_ANIM_SPEED + Math.PI / 2) * TITLE_SCALE;
-            
+
             ctx.save();
             ctx.translate(centerX, centerY);
-            
+
             ctx.fillText("Welcome to", -190, -25);
-            
+
             ctx.scale(scale, scale);
             ctx.rotate(rotation);
 
@@ -176,7 +176,7 @@ class Game {
                 gameStarted = true;
 
                 allBtns.forEach(btn => btn.remove());
-                
+
                 const preset = worldSizePresets[worldSizePreset];
                 this.worldRadius = preset.radius;
                 this.player = new PlayerSnake(this);
