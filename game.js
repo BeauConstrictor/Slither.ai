@@ -70,11 +70,12 @@ class Game {
         this.updateDeltaTime(timestamp);
 
         if (this.input.scrollDelta !== 0) {
-            let zoomChange = this.input.scrollDelta > 0 ? 0.95 : 1.05;
+            let zoomChange = 1 + (this.input.scrollDelta > 0 ? -ZOOM_SPEED : ZOOM_SPEED);
             if (this.input.keys.has("z")) {
                 if (zoomChange > 1) zoomChange *= ZOOM_SPEED_BOOST;
                 else this.zoom /= ZOOM_SPEED_BOOST;
             };
+            console.log(zoomChange);
             this.zoom *= zoomChange;
             this.input.scrollDelta = 0;
         }

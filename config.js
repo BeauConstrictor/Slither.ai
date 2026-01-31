@@ -1,6 +1,7 @@
 // MAP
 const TILE = "./assets/bg.png";
 const SIM_SPEED = 1;
+const ZOOM_SPEED = 0.06;
 const ZOOM_SPEED_BOOST = 2;
 
 const PALETTE = [
